@@ -31,6 +31,8 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      RUBOCOP_CACHE_ROOT: tmp/rubocop
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
@@ -43,7 +45,7 @@ jobs:
         env:
           DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', 'Gemfile.lock') }}
         with:
-          path: ~/.cache/rubocop_cache/
+          path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name == github.event.repository.default_branch && github.run_id || 'default' }}
           restore-keys: |
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
@@ -95,10 +97,14 @@ jobs:
   rubocop:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      RUBOCOP_CACHE_ROOT: tmp/rubocop
 {% endraw %}
 {% endhighlight %}
 
 Defines the job and its runner and timeout. Adjust the timeout if necessary, but keep it as low as possible in case a workflow run gets stuck so you don't get billed for wasted minutes ([default timeout is 6 hours](https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions#jobsjob_idtimeout-minutes), which could cost you a couple $$ if something goes awry and you don't notice it (speaking from experience)).
+
+This part of the workflow also sets up the [`RUBOCOP_CACHE_ROOT`](https://docs.rubocop.org/rubocop/usage/caching.html#cache-path) environment variable to save RuboCop cache in the `tmp/rubocop` folder. This is the folder we'll be saving in GitHub Actions cache later on.
 
 ### Repo setup
 
@@ -127,14 +133,14 @@ This is the main dish. The following step uses the [cache action](https://github
         env:
           DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', 'Gemfile.lock') }}
         with:
-          path: ~/.cache/rubocop_cache/
+          path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name == github.event.repository.default_branch && github.run_id || 'default' }}
           restore-keys: |
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
 {% endraw %}
 {% endhighlight %}
 
-We're caching `~/.cache/rubocop_cache/`, which is the [default folder for RuboCop cache](https://docs.rubocop.org/rubocop/usage/caching.html#cache-path) (usually; consult the docs, they know best).
+The path we're caching is defined in the environment variable `RUBOCOP_CACHE_ROOT` that was set on job-level. Setting this folder explicitly ensures RuboCop cache is located in the same folder that GH Actions caches.
 
 Cache is saved under the key:
 {% highlight text %}
