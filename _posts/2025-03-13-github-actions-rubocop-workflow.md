@@ -211,3 +211,8 @@ $ bundle exec rubocop --list-target-files | wc -l
 {% endhighlight %}
 
 Then, update `MaxFilesInCache` in your `.rubocop.yml` to a value greater than that.
+<br/>
+<br/>
+#### Update on March 28, 2025
+
+This caching step has been [added to GHA workflows created by new Rails apps](https://github.com/rails/rails/pull/54754).
