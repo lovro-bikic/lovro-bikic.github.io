@@ -51,8 +51,6 @@ I recently spent some time optimizing the test suite on a project with more than
 {% highlight ruby %}
 {% raw %}
 # spec/factory_bot_spec.rb
-require 'rails_helper'
-
 RSpec.describe FactoryBot do
   describe '.build' do
     described_class.factories.each do |factory|
