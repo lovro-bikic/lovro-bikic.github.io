@@ -43,14 +43,14 @@ jobs:
       - name: Prepare RuboCop cache
         uses: actions/cache@v4
         env:
-          DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', 'Gemfile.lock') }}
+          DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', '**/.rubocop_todo.yml', 'Gemfile.lock') }}
         with:
           path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name == github.event.repository.default_branch && github.run_id || 'default' }}
           restore-keys: |
             rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-
       - name: Run RuboCop
-        run: bundle exec rubocop --format github
+        run: bundle exec rubocop --format github --format clang
 {% endraw %}
 {% endhighlight %}
 
@@ -131,7 +131,7 @@ This is the main dish. The following step uses the [cache action](https://github
       - name: Prepare RuboCop cache
         uses: actions/cache@v4
         env:
-          DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', 'Gemfile.lock') }}
+          DEPENDENCIES_HASH: ${{ hashFiles('.ruby-version', '**/.rubocop.yml', '**/.rubocop_todo.yml', 'Gemfile.lock') }}
         with:
           path: ${{ env.RUBOCOP_CACHE_ROOT }}
           key: rubocop-cache-${{ runner.os }}-${{ env.DEPENDENCIES_HASH }}-${{ github.ref_name == github.event.repository.default_branch && github.run_id || 'default' }}
@@ -156,13 +156,14 @@ ${{ github.ref_name == github.event.repository.default_branch && github.run_id |
 
 `{% raw %}${{ env.DEPENDENCIES_HASH }}{% endraw %}` is an environment variable defined as:
 {% highlight text %}
-hashFiles('.ruby-version', '**/.rubocop.yml', 'Gemfile.lock')
+hashFiles('.ruby-version', '**/.rubocop.yml', '**/.rubocop_todo.yml', 'Gemfile.lock')
 {% endhighlight %}
 
 [hashFiles](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/evaluate-expressions-in-workflows-and-actions#hashfiles) returns a hash of a given set of files and this particular set aims to follow RuboCop's [cache validity rules](https://docs.rubocop.org/rubocop/usage/caching.html#cache-validity). An existing cache won't be used in a later run if:
 <ul>
 <li>Ruby version changes (assuming there's a <code>.ruby-version</code> file), or</li>
 <li><a href="https://docs.rubocop.org/rubocop/configuration.html#config-file-locations">any</a> <code>.rubocop.yml</code> file changes, or</li>
+<li><a href="https://docs.rubocop.org/rubocop/configuration.html#automatically-generated-configuration"><code>.rubocop_todo.yml</code></a> file changes, or</li>
 <li>RuboCop version changes (technically, cache will be invalidated any time Gemfile.lock changes, but this is a pragmatic choice to not overcomplicate the setup).</li>
 </ul>
 
@@ -188,11 +189,11 @@ Finally, we run RuboCop:
 {% highlight yaml %}
 {% raw %}
       - name: Run RuboCop
-        run: bundle exec rubocop --format github
+        run: bundle exec rubocop --format github --format clang
 {% endraw %}
 {% endhighlight %}
 
-[GitHub Actions formatter](https://docs.rubocop.org/rubocop/formatters.html#github-actions-formatter) will add nice annotations in the UI if there are any offenses.
+[GitHub Actions formatter](https://docs.rubocop.org/rubocop/formatters.html#github-actions-formatter) will add nice annotations in the UI if there are any offenses. [Clang](https://docs.rubocop.org/rubocop/formatters.html#clang-style-formatter) formatter is useful if you want to inspect workflow logs.
 <br/>
 <br/>
 Enjoy!
@@ -213,6 +214,14 @@ $ bundle exec rubocop --list-target-files | wc -l
 Then, update `MaxFilesInCache` in your `.rubocop.yml` to a value greater than that.
 <br/>
 <br/>
-#### Update on March 28, 2025
 
+---
+
+<br/>
+#### Update on March 28, 2025
 This caching step has been [added to GHA workflows created by new Rails apps](https://github.com/rails/rails/pull/54754).
+
+#### Update on August 29, 2025
+The article has been updated to include `.rubocop_todo.yml` in `DEPENDENCIES_HASH`. [Thanks koic!](https://github.com/rails/rails/pull/55367)
+
+`--format clang` has also been added to the last step for better workflow debugging.
