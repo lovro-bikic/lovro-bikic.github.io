@@ -65,7 +65,7 @@ I keep the patch with the custom formatter [stashed](https://git-scm.com/docs/gi
 
 ## Running RuboCop
 
-When I run RuboCop on real-world data, I typically run it against a single cop that I'm adding or modifying.
+When I run RuboCop on real-world data, I typically run it with one cop I'm adding or modifying.
 
 Assuming the real-world repo is cloned in the same parent folder as `rubocop`, you can generate the report by running RuboCop from the `rubocop` folder, for example:
 
